@@ -85,3 +85,48 @@ plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynligheten)")
 plt.title("Oppgave 2a(i): $V(x) = k$")
 plt.grid(True, alpha=0.3)
 plt.show()
+
+
+
+
+###Del ii) V(x)=-kx:
+
+
+def V_linear(x, k=1):
+    return -k * x
+
+counts_sum_linear = {}
+min_x_linear = None
+max_x_linear = None
+
+for _ in range(N_runs):
+    positions = initial_positions.copy()
+
+    for _ in range(N_steps):
+        positions = step(positions, V_linear, beta=beta_k)
+    
+    xs, counts = np.unique(positions, return_counts=True)
+
+    if min_x_linear is None:
+        min_x_linear, max_x_linear = int(xs.min()), int(xs.max())
+    else:
+        min_x_linear = min(min_x_linear, int(xs.min()))
+        max_x_linear = max(max_x_linear, int(xs.max()))
+
+    for x, c in zip(xs, counts):
+        counts_sum_linear[int(x)] = counts_sum_linear.get(int(x), 0) + int(c)
+
+
+x_axis_linear = np.arange(min_x_linear, max_x_linear + 1)
+avg_counts_linear = np.array(
+    [counts_sum_linear.get(int(x), 0) for x in x_axis_linear], dtype=float
+) / N_runs
+avg_density_linear = avg_counts_linear / N_particles
+
+plt.figure()
+plt.plot(x_axis_linear, avg_density_linear, marker='o', linestyle='-')
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynlighet)")
+plt.title("Oppgave 2a(ii): $V(x) = -kx$")
+plt.grid(True, alpha=0.3)
+plt.show()
