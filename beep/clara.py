@@ -19,7 +19,7 @@ initial_positions = np.arange(N_particles)
 def V_constant(x,k=1):
     return k
 
-def transition_probabilities(x0, V, beta=1):
+def transition_probabilities(x0, V, beta=1.0):
     V_minus = V(x0 - 1)
     V_0 = V(x0)
     V_plus = V(x0 + 1)
@@ -36,7 +36,7 @@ def transition_probabilities(x0, V, beta=1):
 
     return p_minus, p_0, p_plus
 
-def step(positions, V):
+def step(positions, V, beta=1.0):
     new_positions = positions.copy()
 
     for i, x0 in enumerate(positions):
@@ -44,15 +44,44 @@ def step(positions, V):
 
         r = np.random.rand()
         if r <= p_minus:
-            new_positions[i] = x0 - 1
+            new_positions[i] = x0 - h
         elif r > 1 - p_plus:
-            new_positions[i] = x0 + 1
+            new_positions[i] = x0 + h
         else:
             new_positions[i] = x0
     
     return new_positions
 
-positions = initial_positions.copy()
-for _ in range(N_steps):
-    positions = step(positions, V_constant)
+counts_sum = {}
+min_x = None
+max_x = None
 
+for _ in range(N_runs):
+    positions = initial_positions.copy()
+
+    for _ in range(N_steps):
+        positions = step(positions, V_constant, beta=beta_k)
+
+    xs, counts = np.unique(positions, return_counts=True)
+
+    if min_x is None:
+        min_x, max_x = int(xs.min()), int(xs.max())
+    else:
+        min_x = min(min_x, int(xs.min()))
+        max_x = max(max_x, int(xs.max()))
+
+    for x, c in zip(xs, counts):
+        counts_sum[int(x)] = counts_sum.get(int(x), 0) + int(c)
+
+x_axis = np.arange(min_x, max_x + 1)
+avg_counts = np.array([counts_sum.get(int(x), 0) for x in x_axis], dtype=float) / N_runs
+avg_density = avg_counts / N_particles
+
+
+plt.figure()
+plt.plot(x_axis, avg_density, marker='o', linestyle='-')
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynligheten)")
+plt.title("Oppgave 2a(i): $V(x) = k$")
+plt.grid(True, alpha=0.3)
+plt.show()
