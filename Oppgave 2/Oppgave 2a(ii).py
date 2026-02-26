@@ -1,1 +1,0 @@
-##Oppgave 2ai
