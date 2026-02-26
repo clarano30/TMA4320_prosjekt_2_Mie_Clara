@@ -130,3 +130,36 @@ plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynlighet)")
 plt.title("Oppgave 2a(ii): $V(x) = -kx$")
 plt.grid(True, alpha=0.3)
 plt.show()
+
+
+
+### Exercise 2b
+
+def step_hardcore(positions, V, beta=1.0, h=1):
+    new_positions = positions.copy()
+    occupied = set(new_positions.tolist())
+
+    indices = np.random.permutation(len(new_positions))
+
+    for i in indices:
+        x0 = new_positions[i]
+
+        p_minus, p_0, p_plus = transition_probabilities(x0, V, beta)
+        r = np.random.rand()
+
+        if r <= p_minus:
+            candidate = x0 - h
+        elif r > 1 - p_plus:
+            candidate = x0 + h
+        else:
+            candidate = x0
+
+        if candidate != x0 and candidate not in occupied:
+            occupied.remove(x0)
+            occupied.add(candidate)
+            new_positions[i] = candidate
+
+    return new_positions
+
+
+
