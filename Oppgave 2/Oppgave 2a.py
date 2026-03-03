@@ -177,18 +177,20 @@ rng = np.random.default_rng(0)
 
 
 
-def V1_sawtooth = (x, Nx=100, alpha=0.8, k=1):
+def V1_sawtooth(x, Nx=100, alpha=0.8, k=1):
+    x = np.asarray(x)
+
     u = np.mod(x, Nx).astype(float)
 
-    y = np.where(u <= alpha * Nx, u, u * Nx)
+    y = np.where(u <= alpha * Nx, u, u - Nx)
 
-    V = np.empty_like(x, dtype=float)
+    V = np.zeros_like(x, dtype=float)
 
-    mask_pos = (y > 0)
+    mask_pos = y > 0
     V[mask_pos] = k * (y[mask_pos] / (alpha * Nx)) #fra ligning 9 i oppgaven.
 
-    mask_nonpos = ~mask_pos
-    V[mask_pos] = (-k) * (x / ((1 - alpha) * Nx)) #igjen fra ligning 9.
+    mask_neg = ~mask_pos
+    V[mask_neg] = (-k) * (x[mask_neg] / ((1 - alpha) * Nx)) #igjen fra ligning 9.
 
     return V
 
@@ -211,9 +213,11 @@ def step_saw(pos, alpha):
     V0 = V1_sawtooth(x0, Nx, alpha = alpha, k = k)
     Vplus = V1_sawtooth(xplus, Nx, alpha = alpha, k = k)
 
-    wminus = np.exp(-beta * Vminus)
-    w0 = np.exp(-beta * V0)
-    wplus = np.exp(-beta * Vplus)
+    Vmin = np.minimum(np.minimum(Vminus, V0), Vplus) #Prøver å unngå overflow ved å trekke fra min før eksponentiering. 
+
+    wminus = np.exp(-beta * (Vminus - Vmin))
+    w0 = np.exp(-beta * (V0 - Vmin))
+    wplus = np.exp(-beta * (Vplus - Vmin))
 
     Z = wminus + w0 + wplus
 
@@ -232,7 +236,7 @@ def step_saw(pos, alpha):
 
 
 def simulate_a(alpha):
-    pos = np.repeat(np.arange(L), np // L)
+    pos = np.repeat(np.arange(L), Np // L)
 
     J_t = np.zeros(T_total, dtype=float)
 
@@ -250,21 +254,22 @@ def simulate_a(alpha):
 
 
 results = {}
-for a in [0.8, 0.1]:
-    J_t, J_avg = simulate_a(alpha=a)
-    results[a] = (J_t, J_avg)
 
-    print(f"\nalpha = {a}:")
+for alpha in [0.8, 0.1]:
+    J_t, J_avg = simulate_a(alpha)
+    results[alpha] = (J_t, J_avg)
+
+    print(f"\nalpha = {alpha}:")
     for i, val in enumerate(J_avg):
         print(f"  J_avg({i}) = {val:.6e}")
 
-for a in [0.8, 0.1]:
-    J_t, J_avg = results[a]
+for alpha in [0.8, 0.1]:
+    J_t, J_avg = results[alpha]
     
     plt.figure()
     plt.plot(np.arange(10), J_avg, marker="o")
     plt.xlabel("Cycle n")
     plt.ylabel("J_avg(n)")
-    plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={a}")
+    plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={alpha}")
     plt.grid(True, alpha=0.3)
     plt.show()
