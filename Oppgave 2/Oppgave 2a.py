@@ -163,3 +163,63 @@ def step_hardcore(positions, V, beta=1.0, h=1):
 
 
 
+###Oppgave 3a
+
+Nx = 100
+L = 2 * Nx
+Tp = 500
+T_total = 20 * Tp
+k = 1.0
+beta_k = 1000
+beta = beta_k / k
+Np = 12 * Nx
+rng = np.random.default_rng(0)
+
+
+
+def V1_sawtooth = (x, Nx=100, alpha=0.8, k=1):
+    u = np.mod(x, Nx).astype(float)
+
+    y = np.where(u <= alpha * Nx, u, u * Nx)
+
+    V = np.empty_like(x, dtype=float)
+
+    mask_pos = (y > 0)
+    V[mask_pos] = k * (y[mask_pos] / (alpha * Nx)) #fra ligning 9 i oppgaven.
+
+    mask_nonpos = ~mask_pos
+    V[mask_pos] = (-k) * (x / ((1 - alpha) * Nx)) #igjen fra ligning 9.
+
+    return V
+
+def step_flat(pos):
+    r = rng.random(size=pos.size)
+    move = np.zeros_like(pos, dtype=int)
+    move[r < 1/3] = -1
+    move[r > 2/3] = +1
+    n_minus = np.count_nonzero(move == -1)
+    n_plus = np.count_nonzero(move == +1)
+    pos = (pos + move) % L
+    return pos, n_plus, n_minus
+
+def step_saw(pos, alpha):
+    xminus = (pos - 1) % L
+    x0 = pos
+    xplus = (pos + 1) % L
+
+    Vminus = V1_sawtooth(xminus, Nx, alpha = alpha, k = k)
+    V0 = V1_sawtooth(x0, Nx, alpha = alpha, k = k)
+    Vplus = V1_sawtooth(xplus, Nx, alpha = alpha, k = k)
+
+    wminus = np.exp(-beta * Vminus)
+    w0 = np.exp(-beta * V0)
+    wplus = np.exp(-beta * Vplus)
+
+    Z = wminus + w0 + wplus
+
+    
+
+
+
+
+
