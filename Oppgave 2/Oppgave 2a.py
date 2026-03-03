@@ -217,9 +217,54 @@ def step_saw(pos, alpha):
 
     Z = wminus + w0 + wplus
 
+    pminus = wminus / Z
+    pplus = wplus / Z
+
+    r = rng.random(size=pos.size)
+    move = np.zeros_like(pos, dtype=int)
+    move[r <= pminus] = -1
+    move[r > (1 - pplus)] = +1
+
+    nminus = np.count_nonzero(move == -1)
+    nplus = np.count_nonzero(move == +1)
+    pos = (pos + move) % L
+    return pos, nplus, nminus
+
+
+def simulate_a(alpha):
+    pos = np.repeat(np.arange(L), np // L)
+
+    J_t = np.zeros(T_total, dtype=float)
+
+    for t in range(T_total):
+        in_V2 = ((t // Tp) % 2 == 0) #starter i V2 med t=0, og vi bytter for hver Tp.
+        if in_V2:
+            pos, nplus, nminus = step_flat(pos)
+        else:
+            pos, nplus, nminus = step_saw(pos, alpha)
+        
+        J_t[t] = (nplus - nminus) / Np
+
+    J_avg = np.array([J_t[n*(2*Tp):(n+1)*(2*Tp)].mean() for n in range(10)])
+    return J_t, J_avg
+
+
+results = {}
+for a in [0.8, 0.1]:
+    J_t, J_avg = simulate_a(alpha=a)
+    results[a] = (J_t, J_avg)
+
+    print(f"\nalpha = {a}:")
+    for i, val in enumerate(J_avg):
+        print(f"  J_avg({i}) = {val:.6e}")
+
+for a in [0.8, 0.1]:
+    J_t, J_avg = results[a]
     
-
-
-
-
-
+    plt.figure()
+    plt.plot(np.arange(10), J_avg, marker="o")
+    plt.xlabel("Cycle n")
+    plt.ylabel("J_avg(n)")
+    plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={a}")
+    plt.grid(True, alpha=0.3)
+    plt.show()
