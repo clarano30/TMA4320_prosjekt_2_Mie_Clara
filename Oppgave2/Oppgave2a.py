@@ -163,9 +163,6 @@ def step_hardcore(positions, V, beta=1.0, h=1):
 
 
 
-<<<<<<< HEAD:Oppgave2/Oppgave2a.py
-
-=======
 ###Oppgave 3a
 
 Nx = 100
@@ -276,4 +273,3 @@ for alpha in [0.8, 0.1]:
     plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={alpha}")
     plt.grid(True, alpha=0.3)
     plt.show()
->>>>>>> clara:Oppgave 2/Oppgave 2a.py
