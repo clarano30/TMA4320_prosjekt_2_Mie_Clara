@@ -244,7 +244,6 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.show()
 
-
 ###Oppgave 3a
 
 Nx = 100
