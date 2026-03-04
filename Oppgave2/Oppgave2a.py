@@ -305,4 +305,9 @@ Javg_values = np.array([sim_one_cyc_for_Tp(Tp, alpha) for Tp in Tp_values])
 plt.figure()
 plt.plot(Tp_values, Javg_values, marker='o')
 plt.xlabel("Tp")
-plt.ylabel("Cycle-averaged current vs Tp (alpha=0.8)")
+plt.ylabel("J_avg (en syklus)")
+plt.title("Oppgave 3b: Cycle-averaged current vs Tp for alpha=0.8")
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
