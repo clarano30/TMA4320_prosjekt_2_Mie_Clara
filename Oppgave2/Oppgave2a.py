@@ -265,3 +265,44 @@ for alpha in [0.8, 0.1]:
 
 for alpha in [0.8, 0.1]:
     J_t, J_avg = results[alpha]
+
+
+#oppgave 3b
+
+alpha = 0.8
+Np = 40 * Nx #for 3b
+L = 2 * Nx
+
+Tp_values = np.linspace(1, 1001, 50, dtype=int) #Fordi vi trenger 50 verdier mellom 1 og 1001 som er jevnt fordelt. 
+
+def init_two_minima(Np, Nx, L):
+    pos = np.empty(Np, dtype=int)
+    pos[:Np//2] = 0
+    pos[Np//2:] = Nx
+    return pos % L
+
+def sim_one_cyc_for_Tp(Tp, alpha):
+    pos = init_two_minima(Np, Nx, L)
+
+    T_cycle = 2 * Tp
+    J_t = np.zeros(T_cycle, dtype=float)
+
+    for t in range(T_cycle):
+        in_V2 = ((t//Tp) % 2 == 0) #her starter vi i V2, og bytter for hver Tp.
+        if in_V2:
+            pos, nplus, nminus = step_flat(pos)
+        else:
+            pos, nplus, nminus = step_saw(pos, alpha)
+
+        J_t[t] = (nplus - nminus) / Np
+
+    J_avg = J_t.mean() #som gir cycle-averaged current over en hel syklus.
+    return J_avg
+
+Javg_values = np.array([sim_one_cyc_for_Tp(Tp, alpha) for Tp in Tp_values])
+
+
+plt.figure()
+plt.plot(Tp_values, Javg_values, marker='o')
+plt.xlabel("Tp")
+plt.ylabel("Cycle-averaged current vs Tp (alpha=0.8)")
