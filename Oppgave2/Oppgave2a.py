@@ -132,21 +132,10 @@ plt.show()
 
 ### Exercise 2b
 
-# =========================
-# Exercise 2b (hard-core)
-# =========================
-
 def step_hardcore(positions, V, beta=1.0, h=1):
-    """
-    One time step with hard-core repulsion:
-    - random update order each time step
-    - particle moves left/right/stays based on probabilities
-    - if target site is occupied, move is aborted
-    """
     new_positions = positions.copy()
     occupied = set(new_positions.tolist())
 
-    # random order each time step
     indices = np.random.permutation(len(new_positions))
 
     for i in indices:
@@ -162,7 +151,6 @@ def step_hardcore(positions, V, beta=1.0, h=1):
         else:
             candidate = x0
 
-        # hard-core: move only if site is free
         if candidate != x0 and candidate not in occupied:
             occupied.remove(x0)
             occupied.add(candidate)
@@ -172,10 +160,6 @@ def step_hardcore(positions, V, beta=1.0, h=1):
 
 
 def run_simulation_avg_density(step_fn, V_fn, beta=1.0):
-    """
-    Runs N_runs simulations of N_steps steps starting from initial_positions.
-    Returns x_axis and avg_density (average particle density along x).
-    """
     counts_sum = {}
     min_x = None
     max_x = None
