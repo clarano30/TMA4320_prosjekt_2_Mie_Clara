@@ -271,7 +271,7 @@ def V1_sawtooth(x, Nx=100, alpha=0.8, k=1):
     V[mask_pos] = k * (y[mask_pos] / (alpha * Nx)) #fra ligning 9 i oppgaven.
 
     mask_neg = ~mask_pos
-    V[mask_neg] = (-k) * (x[mask_neg] / ((1 - alpha) * Nx)) #igjen fra ligning 9.
+    V[mask_neg] = (-k) * (y[mask_neg] / ((1 - alpha) * Nx)) #igjen fra ligning 9.
 
     return V
 
@@ -392,3 +392,44 @@ plt.grid(True, alpha=0.3)
 plt.show()
 
 
+#oppgave 3c
+
+from scipy.special import erfc
+
+Tp = 500
+Np = 12* Nx #for 3c
+alpha_values = np.linspace(0, 1, 52)[1:-1] #np.linspace(0, 1, 50) fikk problemer med runtime, så bytter den til den nye. 
+
+def Javg_analytical(alpha, Tp, Nx):
+    a1 = (alpha * Nx) / (2 * np.sqrt(Tp / 3))
+    a2 = ((1- alpha) * Nx) / (2 * np.sqrt(Tp / 3))
+    return (Nx / (4 *Tp)) * (erfc(a1) - erfc(a2))
+
+def sim_one_cyc_for_alpha(alpha):
+    pos = np.repeat(np.arange(L), Np // L) #6 partikler for hver punkt når Np=12Nx og L=2Nx
+
+    T_cycle = 2 * Tp
+    J_t = np.zeros(T_cycle, dtype=float)
+
+    for t in range(T_cycle):
+        in_V2 = ((t // Tp) % 2 == 0)
+        if in_V2:
+            pos, nplus, nminus = step_flat(pos)
+        else:
+            pos, nplus, nminus = step_saw(pos, alpha)
+        J_t[t] = (nplus - nminus) / Np
+
+    return J_t.mean()
+
+J_num = np.array([sim_one_cyc_for_alpha(alpha) for alpha in alpha_values]) 
+J_ana = np.array([Javg_analytical(alpha, Tp, Nx) for alpha in alpha_values])
+
+plt.figure()
+plt.plot(alpha_values, J_num, marker='o', label='Numerisk (1 Syklus)')
+plt.plot(alpha_values, J_ana, marker='x', label='Analytisk (Eq 15)')
+plt.xlabel("alpha")
+plt.ylabel("J_avg")
+plt.title("Oppgave 3c: J_avg vs alpha for Tp=500")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.show()
