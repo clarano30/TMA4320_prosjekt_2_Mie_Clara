@@ -346,11 +346,3 @@ for alpha in [0.8, 0.1]:
 
 for alpha in [0.8, 0.1]:
     J_t, J_avg = results[alpha]
-    
-    plt.figure()
-    plt.plot(np.arange(10), J_avg, marker="o")
-    plt.xlabel("Cycle n")
-    plt.ylabel("J_avg(n)")
-    plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={alpha}")
-    plt.grid(True, alpha=0.3)
-    plt.show()
