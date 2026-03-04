@@ -38,10 +38,8 @@ def transition_probabilities(x0, V, beta=1.0):
 
 def step(positions, V, beta=1.0):
     new_positions = positions.copy()
-
     for i, x0 in enumerate(positions):
-        p_minus, p_0, p_plus = transition_probabilities(x0, V)
-
+        p_minus, p_0, p_plus = transition_probabilities(x0, V, beta)
         r = np.random.rand()
         if r <= p_minus:
             new_positions[i] = x0 - h
@@ -49,7 +47,6 @@ def step(positions, V, beta=1.0):
             new_positions[i] = x0 + h
         else:
             new_positions[i] = x0
-    
     return new_positions
 
 counts_sum = {}
@@ -135,10 +132,21 @@ plt.show()
 
 ### Exercise 2b
 
+# =========================
+# Exercise 2b (hard-core)
+# =========================
+
 def step_hardcore(positions, V, beta=1.0, h=1):
+    """
+    One time step with hard-core repulsion:
+    - random update order each time step
+    - particle moves left/right/stays based on probabilities
+    - if target site is occupied, move is aborted
+    """
     new_positions = positions.copy()
     occupied = set(new_positions.tolist())
 
+    # random order each time step
     indices = np.random.permutation(len(new_positions))
 
     for i in indices:
@@ -154,6 +162,7 @@ def step_hardcore(positions, V, beta=1.0, h=1):
         else:
             candidate = x0
 
+        # hard-core: move only if site is free
         if candidate != x0 and candidate not in occupied:
             occupied.remove(x0)
             occupied.add(candidate)
@@ -162,10 +171,96 @@ def step_hardcore(positions, V, beta=1.0, h=1):
     return new_positions
 
 
+def run_simulation_avg_density(step_fn, V_fn, beta=1.0):
+    """
+    Runs N_runs simulations of N_steps steps starting from initial_positions.
+    Returns x_axis and avg_density (average particle density along x).
+    """
+    counts_sum = {}
+    min_x = None
+    max_x = None
 
-<<<<<<< HEAD:Oppgave2/Oppgave2a.py
+    for _ in range(N_runs):
+        positions = initial_positions.copy()
 
-=======
+        for _ in range(N_steps):
+            positions = step_fn(positions, V_fn, beta=beta, h=h)
+
+        xs, counts = np.unique(positions, return_counts=True)
+
+        if min_x is None:
+            min_x, max_x = int(xs.min()), int(xs.max())
+        else:
+            min_x = min(min_x, int(xs.min()))
+            max_x = max(max_x, int(xs.max()))
+
+        for x, c in zip(xs, counts):
+            counts_sum[int(x)] = counts_sum.get(int(x), 0) + int(c)
+
+    x_axis = np.arange(min_x, max_x + 1)
+    avg_counts = np.array([counts_sum.get(int(x), 0) for x in x_axis], dtype=float) / N_runs
+    avg_density = avg_counts / N_particles
+
+    return x_axis, avg_density
+
+
+# Graf for 2b(i) og for V(x) = k 
+x_axis_b1, avg_density_b1 = run_simulation_avg_density(
+    step_fn=step_hardcore,
+    V_fn=V_constant,
+    beta=beta_k
+)
+
+plt.figure()
+plt.plot(x_axis_b1, avg_density_b1, marker='o', linestyle='-')
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynlighet)")
+plt.title("Oppgave 2b(i): Hard-core, $V(x)=k$")
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+# Graf for 2b(ii)for V(x) = -kx
+
+x_axis_b2, avg_density_b2 = run_simulation_avg_density(
+    step_fn=step_hardcore,
+    V_fn=V_linear,
+    beta=beta_k
+)
+
+plt.figure()
+plt.plot(x_axis_b2, avg_density_b2, marker='o', linestyle='-')
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling (sannsynlighet)")
+plt.title("Oppgave 2b(ii): Hard-core, $V(x)=-kx$")
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Her sammenligner vi 2a og 2b sine grafer
+# V(x) = k
+plt.figure()
+plt.plot(x_axis, avg_density, marker='o', linestyle='-', label="2a: No interaction")
+plt.plot(x_axis_b1, avg_density_b1, marker='o', linestyle='--', label="2b: Hard-core")
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling")
+plt.title("Comparison: V(x) = k")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+# V(x) = -kx
+plt.figure()
+plt.plot(x_axis_linear, avg_density_linear, marker='o', linestyle='-', label="2a: No interaction")
+plt.plot(x_axis_b2, avg_density_b2, marker='o', linestyle='--', label="2b: Hard-core")
+plt.xlabel("x")
+plt.ylabel("Gjennomsnittlig partikkelfordeling")
+plt.title("Comparison: V(x) = -kx")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
 ###Oppgave 3a
 
 Nx = 100
@@ -276,4 +371,3 @@ for alpha in [0.8, 0.1]:
     plt.title(f"Oppgave 3a: Cycle-averaged current, alpha={alpha}")
     plt.grid(True, alpha=0.3)
     plt.show()
->>>>>>> clara:Oppgave 2/Oppgave 2a.py
