@@ -6,27 +6,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# -------------------------
-# Parameter (gitt)
-# -------------------------
-beta = 1000.0          # slik at beta*k = 1000 when k=1
+beta = 1000.0          
 Nx = 20
 alpha = 0.2
 Tp = 40
 
 n_peaks = 4
-L = Nx * n_peaks       # 80 sites total
+L = Nx * n_peaks       # 80 totalt
 n_cycles = 5
-T = n_cycles * Tp      # 200 steps
+T = n_cycles * Tp      # 200 steg
 
-# Choose (as asked)
-N = 10                 # nummer of particles
-b = 2                  # particle size (exclusion distance)
+# Valgte verdier 
+N = 10                 
+b = 2                  
 
-
-# -------------------------
-# i) Ratchet potential + flashing
-# -------------------------
 def sawtooth_V_at(x, Nx=20, alpha=0.2, k=1.0):
     """
     Sawtooth potential over one period Nx, extended periodically.
@@ -36,11 +29,11 @@ def sawtooth_V_at(x, Nx=20, alpha=0.2, k=1.0):
     m = int(round(alpha * Nx))
     m = max(1, min(Nx - 1, m))
 
-    # Piecewise linear "tooth"
+    
     if xm < m:
-        return k * (xm / m)                         # ramp up
+        return k * (xm / m)                         
     else:
-        return k * ((Nx - xm) / (Nx - m))          # ramp down
+        return k * ((Nx - xm) / (Nx - m))          
 
 
 def flashing_V_at(x, t, Tp=40, Nx=20, alpha=0.2, k=1.0):
@@ -54,11 +47,7 @@ def flashing_V_at(x, t, Tp=40, Nx=20, alpha=0.2, k=1.0):
         return 0.0
 
 
-# -------------------------
-# ii) Random walk step with:
-# - periodic BC
-# - hard core with size b (no distance <= b)
-# -------------------------
+
 def ring_distance(a, c, L):
     d = abs(a - c)
     return min(d, L - d)
@@ -78,13 +67,6 @@ def allowed_position(candidate, positions, i, b, L):
 
 
 def transition_probabilities(x0, t, beta, L, Tp, Nx, alpha, k=1.0):
-    """
-    Heat-bath style probabilities based on local potential difference.
-    If you must use a specific Eq.(8) from the compendium, replace this function
-    with your Eq.(8) implementation.
-
-    Moves: left, stay, right.
-    """
     xL = (x0 - 1) % L
     xR = (x0 + 1) % L
 
@@ -92,7 +74,6 @@ def transition_probabilities(x0, t, beta, L, Tp, Nx, alpha, k=1.0):
     VL = flashing_V_at(xL, t, Tp=Tp, Nx=Nx, alpha=alpha, k=k)
     VR = flashing_V_at(xR, t, Tp=Tp, Nx=Nx, alpha=alpha, k=k)
 
-    # Boltzmann weights for attempting left/right relative to current
     wL = np.exp(-beta * (VL - V0))
     wR = np.exp(-beta * (VR - V0))
     w0 = 1.0
@@ -105,10 +86,6 @@ def transition_probabilities(x0, t, beta, L, Tp, Nx, alpha, k=1.0):
 
 
 def step_hardcore_sizeb(positions, t, beta, b, L, Tp, Nx, alpha, k=1.0):
-    """
-    One time step: random sequential update (each particle tries once),
-    periodic boundary conditions, and size-b hard-core repulsion.
-    """
     positions = positions.copy()
     order = np.random.permutation(len(positions))
 
@@ -144,14 +121,11 @@ def simulate(positions0, T, beta, b, L, Tp, Nx, alpha, k=1.0):
     return traj
 
 
-# -------------------------
-# Run + plot (as asked)
-# -------------------------
+# Run + plot 
 def main():
-    # Choose initial positions (safe with b=2 on L=80)
+    # Valgte initialer (b=2, L=80)
     positions0 = np.array([8 * i for i in range(N)], dtype=int)
 
-    # Sanity check: ensure initial config satisfies distance > b
     for i in range(N):
         for j in range(i + 1, N):
             if ring_distance(positions0[i], positions0[j], L) <= b:
@@ -169,4 +143,168 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+#oppgave 4b
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+beta = 1000.0
+Nx = 100
+Tp = 300
+Ns = 10
+alpha = 0.2
+b = 20
+
+L = Ns * Nx         
+Nc = 100
+T = Nc * Tp         #totalt steg
+
+def sawtooth_V_at(x, Nx=100, alpha=0.2, k=1.0):
+    xm = x % Nx
+    m = int(round(alpha * Nx))
+    m = max(1, min(Nx - 1, m))
+    if xm < m:
+        return k * (xm / m)
+    else:
+        return k * ((Nx - xm) / (Nx - m))
+    
+# sawtooth når den er på, for x=0,...,L-1
+V_one_period = np.array([sawtooth_V_at(x, Nx=Nx, alpha=alpha, k=1.0) for x in range(Nx)])
+V_on = np.tile(V_one_period, Ns)   # lengde L
+
+def ring_distance(a, c, L):
+    d = abs(a - c)
+    return min(d, L - d)
+
+def allowed_position(candidate, positions, i, b, L):
+    if len(positions) <= 1:
+        return True
+
+    others = np.delete(positions, i)
+    d = np.abs(others - candidate)
+    d = np.minimum(d, L - d)
+    return np.all(d >= b) #skal være raskere enn en for løkke
+
+
+def transition_probabilities(x0, t, beta, L, Tp, V_on):
+    xL = (x0 - 1) % L
+    xR = (x0 + 1) % L
+
+    on = (t % Tp) < (Tp // 2)
+    if on:
+        V0 = V_on[x0]
+        VL = V_on[xL]
+        VR = V_on[xR]
+    else:
+        V0 = VL = VR = 0.0
+
+    wL = np.exp(-beta * (VL - V0))
+    wR = np.exp(-beta * (VR - V0))
+    w0 = 1.0
+    Z = wL + w0 + wR
+    
+    return wL / Z, w0 / Z, wR / Z
+
+
+def step_hardcore_sizeb_and_disp(positions, t, beta, b, L, Tp, V_on):
+    positions = positions.copy()
+    order = np.random.permutation(len(positions))
+
+    disp_sum = 0  
+
+    for i in order:
+        x0 = positions[i]
+        p_minus, p_0, p_plus = transition_probabilities(x0, t, beta, L, Tp, V_on)
+
+        r = np.random.rand()
+        if r <= p_minus:
+            cand = (x0 - 1) % L
+        elif r > 1.0 - p_plus:
+            cand = (x0 + 1) % L
+        else:
+            cand = x0
+
+        if cand != x0 and allowed_position(cand, positions, i, b=b, L=L):
+            if cand == (x0 + 1) % L:
+                disp_sum += 1
+            elif cand == (x0 - 1) % L:
+                disp_sum -= 1
+            positions[i] = cand
+
+    return positions, disp_sum
+
+
+def run_current_for_density(Np, beta, b, L, Tp, Nc, V_on, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    positions = np.floor(np.linspace(0, L, Np, endpoint=False)).astype(int)
+   
+    for i in range(Np):
+        for j in range(i + 1, Np):
+            if ring_distance(positions[i], positions[j], L) < b:
+                raise ValueError("Initial positions violate hard-core (distance < b).")
+
+    J_cycles = []
+    t_global = 0
+
+    for _ in range(Nc):
+        disp_cycle = 0
+        
+        for _ in range(Tp):
+            positions, disp_step = step_hardcore_sizeb_and_disp(
+                positions, t_global, beta, b, L, Tp, V_on
+            )
+            disp_cycle += disp_step
+            t_global += 1
+
+        
+        J_cycles.append(disp_cycle / (Np * Tp))
+
+    return float(np.mean(J_cycles)), float(np.std(J_cycles))
+
+def main_4b():
+    Np_max = L // b  
+    Np_values = np.unique(np.linspace(1, Np_max, 12, dtype=int))
+
+    rhos = (b * Np_values) / L
+    Js = []
+    Jerrs = []
+
+   
+    for Np, rho in zip(Np_values, rhos):
+        J_mean, J_std = run_current_for_density(
+            Np, beta=beta, b=b, L=L, Tp=Tp, Nc=Nc, V_on=V_on
+        )
+        Js.append(J_mean)
+        Jerrs.append(J_std)
+
+        print(f"Np={Np:2d}, rho={rho:.2f}, J={J_mean:.5f} ± {J_std:.5f}")
+
+    Js = np.array(Js)
+    Jerrs = np.array(Jerrs)
+
+    plt.figure()
+    plt.errorbar(rhos, Js, yerr=Jerrs, fmt='o-', capsize=3)
+    plt.xlabel("density $\\rho$")
+    plt.ylabel("cycle-averaged current $J$")
+    plt.title("Exercise 4b: cycle-averaged current vs density")
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+if __name__ == "__main__":
+    main_4b()
+
+
+
+
+
 
