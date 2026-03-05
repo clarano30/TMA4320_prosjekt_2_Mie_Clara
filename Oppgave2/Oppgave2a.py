@@ -433,3 +433,43 @@ plt.title("Oppgave 3c: J_avg vs alpha for Tp=500")
 plt.grid(True, alpha=0.3)
 plt.legend()
 plt.show()
+
+
+
+
+
+# Oppgave 3d
+
+#har samme verdier for Tp, Np, og alpha values som i 3c.
+
+beta_k_values = [0.01, 1, 2, 3, 5, 10]
+
+plt.figure(figsize=(8,5))
+
+linestyles = ['-', '--', '-.', ':', '-', '--'] 
+#gjør dette siden første gang jeg fikk figure, 
+#så var det vanskelig å se forskjellen mellom de forskjellige kurvene.
+
+for i, beta_k in enumerate(beta_k_values):
+    beta = beta_k / k
+    J_num = np.array([sim_one_cyc_for_alpha(alpha) for alpha in alpha_values])
+
+    plt.plot(alpha_values, J_num,
+             linestyle=linestyles[i],
+             linewidth=2,
+             label=f'Numerisk beta k={beta_k}')
+
+#analytiske kurver (samme som i 3c):
+
+plt.plot(alpha_values, J_ana,
+         color='black',
+         linewidth=3,
+         label='Analytisk (Eq 15)')
+
+plt.xlabel("alpha")
+plt.ylabel("J_avg")
+plt.title("Oppgave 3d: J_avg vs alpha for ulike beta_k")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout() #prøver bare å gjøre layouten litt bedre, siden det var litt mange kurver. 
+plt.show()
