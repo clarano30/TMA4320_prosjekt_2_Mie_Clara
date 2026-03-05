@@ -163,7 +163,7 @@ def step_hardcore(positions, V, beta=1.0, h=1):
 
 
 
-###Oppgave 3a
+#Oppgave 3a
 
 Nx = 100
 L = 2 * Nx
@@ -392,3 +392,48 @@ plt.grid(True, alpha=0.3)
 plt.legend()
 plt.tight_layout() #prøver bare å gjøre layouten litt bedre, siden det var litt mange kurver. 
 plt.show()
+
+
+
+# oppgave 3e
+
+Nx_old, L_old, Np_old = Nx, L, Np #lagrer de gamle verdiene for å kunne bruke dem senere.
+
+Nx = 10
+L= 2 * Nx
+alpha = 0.8
+Np = 40 * Nx
+Tp_values = np.linspace(80, 1500, 20, dtype=int) #oppgaven spør om å bruke 20 verdier mellom 80 og 1500.
+
+
+def sim_one_cyc_for_Tp_3e(Tp):
+    pos = init_two_minima(Np, Nx, L)
+    J_t = np.zeros(2*Tp, dtype=float)
+    for t in range(2*Tp):
+        in_V2 = ((t//Tp) % 2 == 0)
+        if in_V2:
+            pos, nplus, nminus = step_flat(pos)
+        else:
+            pos, nplus, nminus = step_saw(pos, alpha)
+
+        J_t[t] = (nplus - nminus) / Np
+
+    return J_t.mean()
+
+J_num_3e = np.array([sim_one_cyc_for_Tp_3e(Tp) for Tp in Tp_values])
+
+J_ana_3e = np.array([Javg_analytical(alpha, Tp, Nx) for Tp in Tp_values])
+
+plt.figure()
+plt.plot(Tp_values, J_num_3e, marker='o', label='Numerisk (1 Syklus)')
+plt.plot(Tp_values, J_ana_3e, marker='x', label='Analytisk (Eq 15)')
+plt.xlabel("Tp")
+plt.ylabel("J_avg")
+plt.title("Oppgave 3e: J_avg vs Tp for alpha=0.8, Nx=10")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+
+Nx, L, Np = Nx_old, L_old, Np_old #setter tilbake de gamle verdiene for å kunne bruke dem i andre deler av oppgaven.
